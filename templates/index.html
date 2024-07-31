@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Analysis</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin: auto;
+            overflow: hidden;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-top: 20px;
+        }
+        .highlight {
+            color: #007bff;
+        }
+        .box {
+            background: #fff;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .file-label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+        input[type="file"] {
+            display: block;
+            margin-bottom: 20px;
+        }
+        .btn-custom {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .btn-custom:hover {
+            background-color: #0056b3;
+        }
+        #result {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        #final-analysis {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            margin-bottom: 20px;
+        }
+        pre {
+            white-space: pre-wrap; /* Preserve formatting of JSON */
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sponsored by <span class="highlight">AMD</span></h1>
+        <form id="upload-form" enctype="multipart/form-data">
+            <div class="box">
+                <h2>Study Material</h2>
+                <label for="study-material" class="file-label">Choose File</label>
+                <input type="file" id="study-material" name="study_material">
+            </div>
+            <div class="box">
+                <h2>Answer Script</h2>
+                <label for="answer-script" class="file-label">Choose File</label>
+                <input type="file" id="answer-script" name="answer_script">
+            </div>
+            <div class="box">
+                <button type="button" class="btn-custom generate-btn" onclick="uploadFiles()">Generate</button>
+            </div>
+        </form>
+        <div id="result"></div>
+        <div id="final-analysis"></div> <!-- Added for final analysis -->
+    </div>
+    <script>
+        function uploadFiles() {
+            var form = document.getElementById('upload-form');
+            var formData = new FormData(form);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            }).then(response => response.json())
+              .then(data => {
+                  var resultDiv = document.getElementById('result');
+                  var finalAnalysisDiv = document.getElementById('final-analysis');
+
+                  var html = '<h2>Results</h2><ul>';
+                  var finalHtml = '<h2>Final Analysis</h2>';
+
+                  // Iterate through each item in the response data
+                  data.results.forEach(item => {
+                      html += `
+                          <li>
+                              <h3>Question:</h3><p>${item.question || 'undefined'}</p>
+                              <h3>Answer:</h3><p>${item.answer || 'undefined'}</p>
+                              <h3>Weakness:</h3><p>${item.weakness || 'undefined'}</p>
+                          </li>
+                          <hr>
+                      `;
+                  });
+
+                  finalHtml += `
+
+                      <h3>Top 3 Reasons for getting a Wrong Answer:</h3>
+                      <ul>
+                          ${data.final_analysis.Top_Reasons.map(reason => `
+                              <li>${Object.keys(reason)[0]}: ${Object.values(reason)[0]}</li>
+                          `).join('')}
+                      </ul>
+                  `;
+
+                  html += '</ul>';
+                  resultDiv.innerHTML = html;
+                  finalAnalysisDiv.innerHTML = finalHtml;
+              })
+              .catch(error => {
+                  console.error('Error:', error);
+                  var resultDiv = document.getElementById('result');
+                  var finalAnalysisDiv = document.getElementById('final-analysis');
+                  resultDiv.innerHTML = '<h2>Error</h2><pre>' + error + '</pre>';
+                  finalAnalysisDiv.innerHTML = '';
+              });
+        }
+    </script>
+</body>
+</html>
